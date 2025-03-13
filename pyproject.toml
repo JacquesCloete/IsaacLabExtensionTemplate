@@ -61,12 +61,24 @@ known_local_folder = "config"
 
 [tool.pyright]
 
+include = ["source", "scripts"]
 exclude = [
     "**/__pycache__",
     "**/docs",
     "**/logs",
     ".git",
     ".vscode",
+]
+
+# Necessary for Intellisense to work in VSCode
+# Note: assumes IsaacLab is in the same directory as IsaacLabExtensionTemplate
+extraPaths = [
+    "source/ext_template",
+    "source/../../IsaacLab/source/isaaclab",
+    "source/../../IsaacLab/source/isaaclab_mimic",
+    "source/../../IsaacLab/source/isaaclab_rl",
+    "source/../../IsaacLab/source/isaaclab_tasks",
+    "source/../../IsaacLab/source/isaaclab_assets",
 ]
 
 typeCheckingMode = "basic"
