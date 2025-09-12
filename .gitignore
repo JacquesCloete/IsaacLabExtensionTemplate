@@ -1,3 +1,9 @@
+# C++
+**/cmake-build*/
+**/build*/
+**/*.so
+**/*.log*
+
 # Omniverse
 **/*.dmp
 **/.thumbs
@@ -9,6 +15,11 @@
 **/.pytest_cache/
 **/*.pyc
 **/*.pb
+
+# Docker/Singularity
+**/*.sif
+docker/cluster/exports/
+docker/.container.cfg
 
 # IDE
 **/.idea/
@@ -29,8 +40,24 @@
 docker/artifacts/
 *.tmp
 
+# Doc Outputs
+**/docs/_build/*
+**/generated/*
+
 # Isaac-Sim packman
 _isaac_sim*
 _repo
 _build
 .lastformat
+
+# Pre-Trained Checkpoints
+/.pretrained_checkpoints/
+
+# Teleop Recorded Dataset
+datasets
+
+# Tests
+tests/
+
+# Docker history
+.isaac-lab-ext-docker-history

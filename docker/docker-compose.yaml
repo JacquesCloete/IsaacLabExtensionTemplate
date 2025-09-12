@@ -1,7 +1,66 @@
-x-default-isaac-lab-template-environment: &default-isaac-lab-template-environment
+# Copyright (c) 2022-2025, The Isaac Lab Project Developers (https://github.com/isaac-sim/IsaacLab/blob/main/CONTRIBUTORS.md).
+# All rights reserved.
+#
+# SPDX-License-Identifier: BSD-3-Clause
+
+# Here we set the parts that would
+# be re-used between services to an
+# extension field
+# https://docs.docker.com/compose/compose-file/compose-file-v3/#extension-fields
+x-default-isaac-lab-ext-volumes: &default-isaac-lab-ext-volumes
+  # These volumes follow from the original Isaac Lab setup for caching and persistence.
+  # https://docs.omniverse.nvidia.com/app_isaacsim/app_isaacsim/install_faq.html#save-isaac-sim-configs-on-local-disk
+  - type: volume
+    source: isaac-cache-kit
+    target: /root/.cache/nvidia/kit
+  - type: volume
+    source: isaac-cache-ov
+    target: /root/.cache/ov
+  - type: volume
+    source: isaac-cache-pip
+    target: /root/.cache/pip
+  - type: volume
+    source: isaac-cache-gl
+    target: /root/.cache/nvidia/GLCache
+  - type: volume
+    source: isaac-cache-compute
+    target: /root/.nv/ComputeCache
+  - type: volume
+    source: isaac-logs
+    target: /root/.nvidia-omniverse/logs
+  - type: volume
+    source: isaac-data
+    target: /root/.local/share/ov/data
+  - type: volume
+    source: isaac-docs
+    target: /root/Documents
+  # Bind mount for your ext project
+  - type: bind
+    source: ../
+    target: ${DOCKER_ISAACLAB_EXT_PATH}
+    # The effect of these volumes is twofold:
+    # 1. Prevent root-owned files from flooding the _build and logs dir
+    #    on the host machine
+    # 2. Preserve the artifacts in persistent volumes for later copying
+    #    to the host machine
+  - type: volume
+    source: isaac-lab-ext-docs
+    target: ${DOCKER_ISAACLAB_EXT_PATH}/docs/_build
+  - type: volume
+    source: isaac-lab-ext-logs
+    target: ${DOCKER_ISAACLAB_EXT_PATH}/logs
+  - type: volume
+    source: isaac-lab-ext-data
+    target: ${DOCKER_ISAACLAB_EXT_PATH}/data
+  # This volume is used to store the history of the bash shell
+  - type: bind
+    source: .isaac-lab-ext-docker-history
+    target: /root/.bash_history
+
+x-default-isaac-lab-ext-environment: &default-isaac-lab-ext-environment
   - OMNI_KIT_ALLOW_ROOT=1
 
-x-default-isaac-lab-template-deploy: &default-isaac-lab-template-deploy
+x-default-isaac-lab-ext-deploy: &default-isaac-lab-ext-deploy
   resources:
     reservations:
       devices:
@@ -10,24 +69,38 @@ x-default-isaac-lab-template-deploy: &default-isaac-lab-template-deploy
           capabilities: [ gpu ]
 
 services:
-  isaac-lab-template:
-    env_file: .env.base
+  isaac-lab-ext:
+    profiles: [ "ext" ]
+    env_file: .env.ext
     build:
       context: ../
       dockerfile: docker/Dockerfile
       args:
         - ISAACLAB_BASE_IMAGE_ARG=${ISAACLAB_BASE_IMAGE}
-        - DOCKER_ISAACLAB_EXTENSION_TEMPLATE_PATH_ARG=${DOCKER_ISAACLAB_EXTENSION_TEMPLATE_PATH}
-    image: isaac-lab-template
-    container_name: isaac-lab-template
-    volumes:
-      - type: bind
-        source: ../
-        target: ${DOCKER_ISAACLAB_EXTENSION_TEMPLATE_PATH}
+        - DOCKER_ISAACLAB_EXT_PATH_ARG=${DOCKER_ISAACLAB_EXT_PATH}
+    image: isaac-lab-ext${DOCKER_NAME_SUFFIX}
+    container_name: isaac-lab-ext${DOCKER_NAME_SUFFIX}
+    volumes: *default-isaac-lab-ext-volumes
     network_mode: host
-    environment: *default-isaac-lab-template-environment
-    deploy: *default-isaac-lab-template-deploy
+    environment: *default-isaac-lab-ext-environment
+    deploy: *default-isaac-lab-ext-deploy
     # This is the entrypoint for the container
     entrypoint: bash
     stdin_open: true
     tty: true
+
+
+volumes:
+  # isaac-sim
+  isaac-cache-kit:
+  isaac-cache-ov:
+  isaac-cache-pip:
+  isaac-cache-gl:
+  isaac-cache-compute:
+  isaac-logs:
+  isaac-data:
+  isaac-docs:
+  # isaac-lab
+  isaac-lab-ext-docs:
+  isaac-lab-ext-logs:
+  isaac-lab-ext-data:
