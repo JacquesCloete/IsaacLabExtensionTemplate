@@ -18,7 +18,13 @@ def parse_cli_args() -> argparse.Namespace:
 
     parent_parser = argparse.ArgumentParser(add_help=False)
     parent_parser.add_argument(
-        "profile", nargs="?", default="ext", help="Optional container profile specification. Currently only 'ext' is supported."
+        "suffix",
+        nargs="?",
+        default="template",
+        help=(
+            "Docker image and container name suffix. A hyphen is inserted before the suffix if it does not already "
+            "include a hyphen. For example, with suffix 'dev', the container will be named 'isaac-lab-ext-dev'."
+        ),
     )
     parent_parser.add_argument(
         "--files",
@@ -36,15 +42,6 @@ def parse_cli_args() -> argparse.Namespace:
         help=(
             "Allows additional '.env' files to be passed to the docker compose command. These files will be merged with"
             " '.env.ext' in their provided order."
-        ),
-    )
-    parent_parser.add_argument(
-        "--suffix",
-        nargs="?",
-        default=None,
-        help=(
-            "Optional docker image and container name suffix. A hyphen is inserted in between the profile and the suffix."
-            " For example, with profile 'ext' and suffix 'dev', the container will be named 'isaac-lab-ext-dev'."
         ),
     )
 
@@ -76,13 +73,12 @@ def main(args: argparse.Namespace):
 
     ci = ContainerInterface(
         context_dir=Path(__file__).resolve().parent,
-        profile=args.profile,
+        suffix=args.suffix,
         yamls=args.files,
         envs=args.env_files,
-        suffix=args.suffix,
     )
 
-    print(f"[INFO] Using container profile: {ci.profile}")
+    print(f"[INFO] Using container suffix: {ci.suffix}")
     if args.command == "start":
         x11_outputs = x11_utils.x11_check(ci.statefile)
         if x11_outputs is not None:

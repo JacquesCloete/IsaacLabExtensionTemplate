@@ -20,17 +20,18 @@ class ContainerInterface:
     def __init__(
         self,
         context_dir: Path,
-        profile: str = "ext",
+        suffix: str = "template",
         yamls: list[str] | None = None,
         envs: list[str] | None = None,
         statefile: StateFile | None = None,
-        suffix: str | None = None,
     ):
         """Initialize the container interface with the given parameters.
 
         Args:
             context_dir: The context directory for Docker operations.
-            profile: The profile name for the container. Defaults to "ext".
+            suffix: Docker image and container name suffix.  Defaults to "template". A hyphen is inserted before the 
+            suffix if the suffix does not already include a hyphen. For example, if "custom" is passed to suffix, then
+            the produced docker image and container will be named ``isaac-lab-ext-custom``.
             yamls: A list of yaml files to extend ``docker-compose.yaml`` settings. These are extended in the order
                 they are provided.
             envs: A list of environment variable files to extend the ``.env.ext`` file. These are extended in the order
@@ -38,10 +39,6 @@ class ContainerInterface:
             statefile: An instance of the :class:`Statefile` class to manage state variables. Defaults to None, in
                 which case a new configuration object is created by reading the configuration file at the path
                 ``context_dir/.container.cfg``.
-            suffix: Optional docker image and container name suffix.  Defaults to None, in which case, the docker name
-                suffix is set to the empty string. A hyphen is inserted in between the profile and the suffix if
-                the suffix is a nonempty string.  For example, if "ext" is passed to profile, and "custom" is
-                passed to suffix, then the produced docker image and container will be named ``isaac-lab-ext-custom``.
         """
         # set the context directory
         self.context_dir = context_dir
@@ -54,19 +51,15 @@ class ContainerInterface:
             self.statefile = statefile
 
         # set the profile and container name
-        self.profile = profile
-        if self.profile == "isaaclab":
-            # Silently correct from isaaclab to ext, because isaaclab is a commonly passed arg
-            # but not a real profile
-            self.profile = "ext"
+        self.profile = "ext"
 
         # set the docker image and container name suffix
-        if suffix is None or suffix == "":
-            # if no name suffix is given, default to the empty string as the name suffix
-            self.suffix = ""
-        else:
-            # insert a hyphen before the suffix if a suffix is given
+        assert suffix is not None and suffix != "", "Suffix must not be None or an empty string"
+        # insert a hyphen before the suffix if it doesn't already start with a hyphen
+        if not suffix.startswith("-"):
             self.suffix = f"-{suffix}"
+        else:
+            self.suffix = suffix
 
         self.container_name = f"isaac-lab-{self.profile}{self.suffix}"
         self.image_name = f"isaac-lab-{self.profile}{self.suffix}:latest"

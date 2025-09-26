@@ -78,8 +78,8 @@ services:
       args:
         - ISAACLAB_BASE_IMAGE_ARG=${ISAACLAB_BASE_IMAGE}
         - DOCKER_ISAACLAB_EXT_PATH_ARG=${DOCKER_ISAACLAB_EXT_PATH}
-    image: isaac-lab-ext${DOCKER_NAME_SUFFIX}
-    container_name: isaac-lab-ext${DOCKER_NAME_SUFFIX}
+    image: isaac-lab-ext${DOCKER_NAME_SUFFIX-}
+    container_name: isaac-lab-ext${DOCKER_NAME_SUFFIX-}
     volumes: *default-isaac-lab-ext-volumes
     network_mode: host
     environment: *default-isaac-lab-ext-environment

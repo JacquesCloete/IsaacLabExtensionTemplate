@@ -1,4 +1,4 @@
-ARG ISAACLAB_BASE_IMAGE_ARG
+ARG ISAACLAB_BASE_IMAGE_ARG=isaac-lab-base
 
 # we use the basic isaaclab image as the base
 FROM ${ISAACLAB_BASE_IMAGE_ARG} AS base
