@@ -106,7 +106,7 @@ help() {
     echo -e "  job [<suffix>] [<job_args>]  Submit a job to the cluster."
     echo -e "  cleanup                      Remove all timestamped project directories from the cluster."
     echo -e "\nwhere:"
-    echo -e "  <suffix>  is the optional container name suffix. Defaults to 'template'."
+    echo -e "  <suffix>  is the optional container name suffix. Defaults to 'ext_template'."
     echo -e "  <job_args> are optional arguments specific to the job command."
     echo -e "\n" >&2
 }
@@ -136,7 +136,7 @@ fi
 
 command=$1
 shift
-suffix="template"
+suffix="ext_template"
 
 case $command in
     push)

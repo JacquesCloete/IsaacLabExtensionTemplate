@@ -20,7 +20,7 @@ def parse_cli_args() -> argparse.Namespace:
     parent_parser.add_argument(
         "suffix",
         nargs="?",
-        default="template",
+        default="ext_template",
         help=(
             "Docker image and container name suffix. A hyphen is inserted before the suffix if it does not already "
             "include a hyphen. For example, with suffix 'dev', the container will be named 'isaac-lab-ext-dev'."

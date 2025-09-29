@@ -34,10 +34,17 @@ x-default-isaac-lab-ext-volumes: &default-isaac-lab-ext-volumes
   - type: volume
     source: isaac-docs
     target: /root/Documents
-  # Bind mount for your ext project
+  # Bind mounts for your ext project
+  # You could add more here if you want to save e.g. logs, outputs, etc locally
   - type: bind
-    source: ../
-    target: ${DOCKER_ISAACLAB_EXT_PATH}
+    source: ../source
+    target: ${DOCKER_ISAACLAB_PATH}/source
+  - type: bind
+    source: ../scripts
+    target: ${DOCKER_ISAACLAB_PATH}/scripts
+  - type: bind
+    source: ../docs
+    target: ${DOCKER_ISAACLAB_PATH}/docs
     # The effect of these volumes is twofold:
     # 1. Prevent root-owned files from flooding the _build and logs dir
     #    on the host machine
@@ -59,6 +66,8 @@ x-default-isaac-lab-ext-volumes: &default-isaac-lab-ext-volumes
 
 x-default-isaac-lab-ext-environment: &default-isaac-lab-ext-environment
   - OMNI_KIT_ALLOW_ROOT=1
+  - WANDB_API_KEY=${WANDB_API_KEY}
+  # add any other environment variables you want here
 
 x-default-isaac-lab-ext-deploy: &default-isaac-lab-ext-deploy
   resources:
@@ -66,11 +75,11 @@ x-default-isaac-lab-ext-deploy: &default-isaac-lab-ext-deploy
       devices:
         - driver: nvidia
           count: all
-          capabilities: [ gpu ]
+          capabilities: [gpu]
 
 services:
   isaac-lab-ext:
-    profiles: [ "ext" ]
+    profiles: ["ext"]
     env_file: .env.ext
     build:
       context: ../
@@ -88,7 +97,6 @@ services:
     entrypoint: bash
     stdin_open: true
     tty: true
-
 
 volumes:
   # isaac-sim

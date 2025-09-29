@@ -10,7 +10,7 @@ cat <<EOT > job.sh
 
 # The arguments are:
 # $1: Path to the (timestamped) project directory on the cluster
-# $2: The container name (e.g., isaac-lab-ext-template)
+# $2: The container name (e.g., isaac-lab-ext-ext_template)
 # "${@:3}": Any additional arguments for the task
 
 #SBATCH --job-name="$2-$(date +"%Y-%m-%dT%H:%M")"

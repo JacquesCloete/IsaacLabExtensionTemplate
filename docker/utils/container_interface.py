@@ -20,7 +20,7 @@ class ContainerInterface:
     def __init__(
         self,
         context_dir: Path,
-        suffix: str = "template",
+        suffix: str = "ext_template",
         yamls: list[str] | None = None,
         envs: list[str] | None = None,
         statefile: StateFile | None = None,
@@ -29,7 +29,7 @@ class ContainerInterface:
 
         Args:
             context_dir: The context directory for Docker operations.
-            suffix: Docker image and container name suffix.  Defaults to "template". A hyphen is inserted before the 
+            suffix: Docker image and container name suffix.  Defaults to "ext_template". A hyphen is inserted before the 
             suffix if the suffix does not already include a hyphen. For example, if "custom" is passed to suffix, then
             the produced docker image and container will be named ``isaac-lab-ext-custom``.
             yamls: A list of yaml files to extend ``docker-compose.yaml`` settings. These are extended in the order
