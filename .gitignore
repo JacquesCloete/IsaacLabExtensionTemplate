@@ -31,6 +31,7 @@ docker/.container.cfg
 # Outputs
 **/runs/*
 **/logs/*
+!logs/README.md
 **/recordings/*
 **/output/*
 **/outputs/*
@@ -52,6 +53,10 @@ _build
 
 # Pre-Trained Checkpoints
 /.pretrained_checkpoints/
+
+# Data Storage
+**/data_storage/*
+!data_storage/README.md
 
 # Teleop Recorded Dataset
 datasets

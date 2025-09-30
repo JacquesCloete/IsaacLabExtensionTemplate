@@ -16,6 +16,6 @@ RUN bash -i -c "source ${HOME}/.bashrc && \
     cd ${DOCKER_ISAACLAB_EXT_PATH}/source/ext_template && \
     pip install -e ."
 
-# make working directory as the Isaac Lab directory
+# make working directory as the Isaac Lab extension directory
 # this is the default directory when the container is run
-WORKDIR /workspace
+WORKDIR ${DOCKER_ISAACLAB_EXT_PATH}

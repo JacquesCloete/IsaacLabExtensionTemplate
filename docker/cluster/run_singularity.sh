@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-echo "(run_singularity.py): Called on compute node from project directory $1 with container name $2 and arguments ${@:3}"
+echo "(run_singularity.sh): Called on compute node from project directory $1 with container name $2 and arguments ${@:3}"
 
 #==
 # Helper functions
@@ -75,4 +75,4 @@ SINGULARITYENV_WANDB_API_KEY=$WANDB_API_KEY singularity exec \
 # copy resulting cache files back to host
 rsync -azPv $TMPDIR/docker-isaac-sim $CLUSTER_ISAAC_SIM_CACHE_DIR/..
 
-echo "(run_singularity.py): Return"
+echo "(run_singularity.sh): Return"

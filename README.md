@@ -1,20 +1,26 @@
 # Extension Template for Isaac Lab Projects
 
 [![IsaacSim](https://img.shields.io/badge/IsaacSim-5.0.0-silver.svg)](https://docs.omniverse.nvidia.com/isaacsim/latest/overview.html)
-[![Isaac Lab](https://img.shields.io/badge/IsaacLab-2.2.1-silver)](https://isaac-sim.github.io/IsaacLab)
+[![Isaac
+Lab](https://img.shields.io/badge/IsaacLab-2.2.1-silver)](https://isaac-sim.github.io/IsaacLab)
 [![Python](https://img.shields.io/badge/python-3.11-blue.svg)](https://docs.python.org/3/whatsnew/3.11.html)
-[![Linux platform](https://img.shields.io/badge/platform-linux--64-orange.svg)](https://releases.ubuntu.com/22.04/)
-[![Windows platform](https://img.shields.io/badge/platform-windows--64-orange.svg)](https://www.microsoft.com/en-us/)
+[![Linux
+platform](https://img.shields.io/badge/platform-linux--64-orange.svg)](https://releases.ubuntu.com/22.04/)
+[![Windows
+platform](https://img.shields.io/badge/platform-windows--64-orange.svg)](https://www.microsoft.com/en-us/)
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://pre-commit.com/)
 [![License](https://img.shields.io/badge/license-MIT-yellow.svg)](https://opensource.org/license/mit)
 
 ## Overview
 
-This repository serves as a template for building extension projects for Isaac Lab. It allows you to develop in an isolated environment, outside of the core Isaac Lab repository.
+This repository serves as a template for building extension projects for Isaac Lab. It
+allows you to develop in an isolated environment, outside of the core Isaac Lab
+repository.
 
 **Key Features:**
 
-- `Isolation` Work outside the core Isaac Lab repository, ensuring that your development efforts remain self-contained.
+- `Isolation` Work outside the core Isaac Lab repository, ensuring that your development
+  efforts remain self-contained.
 - `Flexibility` This template is set up to allow your code to be run in a container, and
   deployed remotely on a cluster.
 
@@ -29,14 +35,15 @@ guide](https://isaac-sim.github.io/IsaacLab/main/source/deployment/docker.html) 
 the base Isaac Lab image locally.
 
 **NOTE:** If you are using a workstation shared by multiple users, you **must** add a
-unique suffix to your version of
-the base image to prevent overriding other peoples' Isaac Lab images.
+unique suffix to your version of the base image to prevent overriding other peoples'
+Isaac Lab images.
 
 You add a suffix (e.g. `jacques`) as follows:
 ```bash
 /path/to/IsaacLab/docker/container.py start --suffix jacques
 ```
-You must always add the suffix as an argument when interacting with the base container using `container.py`.
+You must always add the suffix as an argument when interacting with the base container
+using `container.py`.
 
 Once you have built your base Isaac Lab image, you can check it exists by doing:
 
@@ -54,7 +61,8 @@ docker images
 First, create a new GitHub repository from the template repository. We will create the
 repository `IsaacLabMyExtension` under user `Jacques` for this guide.
 
-Then, clone the repository separately from the Isaac Lab installation (i.e. outside the `IsaacLab` directory):
+Then, clone the repository separately from the Isaac Lab installation (i.e. outside the
+`IsaacLab` directory):
 
 ```bash
 # Option 1: SSH (recommended)
@@ -64,8 +72,8 @@ git clone git@github.com:Jacques/IsaacLabMyExtension.git
 git clone https://github.com/Jacques/IsaacLabMyExtension.git
 ```
 
-Then rename the contents of the repository to a new project name. We
-will use `my-extension` for this guide. This can be done automatically as follows:
+Then rename the contents of the repository to a new project name. We will use
+`my-extension` for this guide. This can be done automatically as follows:
 ```bash
 # Enter the repository
 cd IsaacLabMyExtension
@@ -73,17 +81,19 @@ cd IsaacLabMyExtension
 python scripts/rename_template.py my-extension
 ```
 
-Then, in a similar approach to building the base image, build the docker container for your extension project:
+Then, in a similar approach to building the base image, build the docker container for
+your extension project:
 
-1. Edit `/path/to/IsaacLabMyExtension/docker/.env.ext` to specify your base image name
+1. Edit `docker/.env.ext` to specify your base image name
 1. Build the container using:
 ```bash
-/path/to/IsaacLabMyExtension/docker/.container.py start
+docker/.container.py start
 ```
 Note that `--suffix` is not needed when interacting with your extension image using
 `container.py` in the extension project.
 
-You can verify your extension image (which will always have the profile `ext`) is built successfully using the same command as earlier:
+You can verify your extension image (which will always have the profile `ext`) is built
+successfully using the same command as earlier:
 
 ```bash
 docker images
@@ -102,7 +112,7 @@ docker images
 if the image exists, you can start the container as follows:
 
 ```bash
-/path/to/IsaacLabMyExtension/docker/.container.py start
+docker/.container.py start
 ```
 
 #### 3.2 Interacting with a running container
@@ -110,16 +120,51 @@ if the image exists, you can start the container as follows:
 To enter the container once started, use:
 
 ```bash
-/path/to/IsaacLabMyExtension/docker/.container.py enter
+docker/.container.py enter
 ```
 
 Alternatively, if you use VSCode, I instead recommend pressing `Ctrl+Shift+P`, selecting
 `Dev Containers: Attach to Running Container...` and then selecting your container. This
-will re-open VSCode inside the container (including integrated terminals).
+will re-open VSCode inside the container (including integrated terminals). Once inside
+the container, open the folder `/workspace/isaaclab_ext`.
 
-To verify the container is correctly built, run the following command inside the container:
+To verify the container is correctly built, run the following command inside the
+container:
 ```bash
 ./isaaclab_ext.sh -p scripts/rsl_rl/train.py --task Ext-Isaac-Velocity-Rough-Anymal-D-v0
+```
+
+**NOTE:** When running Isaac Sim with GUI (i.e. without the `--headless` flag) for the
+first time, it will take a while to finish loading. Be patient. You will likely be spammed with
+`Isaac Sim is not Responding` in GUI, just keep pressing `Wait` until loading completes.
+
+You can use `Ctrl+C` in terminal to kill the run.
+
+#### 3.2.1 Interacting with the container from the local machine
+
+Once the container is started, you can instead interact with it "remotely" from the local machine,
+without entering the container.
+
+To submit a job:
+```bash
+docker/container.py job scripts/rsl_rl/train.py --task Ext-Isaac-Velocity-Rough-Anymal-D-v0 --headless
+# [INFO] Submitting job 'train-20250929_103000' to container 'isaac-lab-ext-my-extension'...
+# [INFO] Successfully submitted job. Use 'status' to check and 'cancel train-20250929_103000' to stop.
+```
+
+To check the status of a job:
+```bash
+docker/container.py status train-20250929_103000
+```
+
+To follow job logs (for job ID `train-20250929_103000`):
+```bash
+docker/container.py logs train-20250929_103000
+```
+
+To cancel a job:
+```bash
+docker/container.py cancel train-20250929_103000
 ```
 
 #### 3.3 Shutting down the container
@@ -127,7 +172,7 @@ To verify the container is correctly built, run the following command inside the
 When you are done or want to stop the running container, you can run the following:
 
 ```bash
-/path/to/IsaacLabMyExtension/docker/.container.py stop
+docker/.container.py stop
 ```
 
 This stops and removes the container, but keeps the image.
@@ -145,7 +190,8 @@ This stops and removes the container, but keeps the image.
 First, create a new GitHub repository from the template repository. We will create the
 repository `IsaacLabMyExtension` under user `Jacques` for this guide.
 
-Then, clone the repository separately from the Isaac Lab installation (i.e. outside the `IsaacLab` directory):
+Then, clone the repository separately from the Isaac Lab installation (i.e. outside the
+`IsaacLab` directory):
 
 ```bash
 # Option 1: SSH (recommended)
@@ -155,8 +201,8 @@ git clone git@github.com:Jacques/IsaacLabMyExtension.git
 git clone https://github.com/Jacques/IsaacLabMyExtension.git
 ```
 
-Then rename the contents of the repository from to a new project name. We
-will use `my-extension` for this guide. This can be done automatically as follows:
+Then rename the contents of the repository from to a new project name. We will use
+`my-extension` for this guide. This can be done automatically as follows:
 ```bash
 # Enter the repository
 cd IsaacLabMyExtension
@@ -179,59 +225,13 @@ Verify that the extension is correctly installed by running the following comman
 python scripts/rsl_rl/train.py --task Ext-Isaac-Velocity-Rough-Anymal-D-v0
 ```
 
+## Remote Workstation Deployment (Requires Container Installation)
+
+For guidance on how to use the container on a remote workstation, see [this page](/docker/remote/README.md).
+
 ## Cluster Deployment (Requires Container Installation)
 
-The method we use for cluster deployment was adapted from the [Isaac Lab Cluster
-Guide](https://isaac-sim.github.io/IsaacLab/main/source/deployment/cluster.html),
-modified to work for the extension. It's recommended to first read through that guide
-before proceeding.
-
-For guidance on using the Oxford ARC/HTC cluster, refer to [this guide](https://arc-user-guide.readthedocs.io/en/latest/).
-
-### 1 Installing Apptainer
-
-Run the following on your local machine:
-
-```bash
-sudo apt update
-sudo apt install -y software-properties-common
-sudo add-apt-repository -y ppa:apptainer/ppa
-sudo apt update
-sudo apt install -y apptainer
-```
-
-### 2 Exporting to a Singularity Image
-
-Run the following on your local machine:
-```bash
-./docker/cluster/cluster_interface.sh push
-```
-This may take a while, so give it some time.
-
-### 3 Define the Cluster Parameters
-
-Edit `docker/cluster/submit_job_slurm.sh` to suit your needs.
-
-### 4 Submit a Job
-
-You can submit a job to the cluster directly from your local machine as follows (make
-sure the `--headless` flag is enabled!):
-```bash
-./docker/cluster/cluster_interface.sh job --task Template-Isaac-Velocity-Rough-Anymal-D-v0 --headless
-```
-This will copy over the present contents of Isaac Lab and your extension onto the cluster in a
-timestamped "temporary" folder and then start the training job.
-
-All training logs will be neatly saved in a separate "permanent" folder in the cluster,
-which you can access during and after training (e.g., for copying back onto your local machine).
-
-### Cleaning Up Code
-
-To clean up space on the cluster, you can delete all timestamped "temporary" folders by
-running the following on your local machine:
-```bash
-./docker/cluster/cluster_interface.sh cleanup
-```
+For guidance on how to use the container on a cluster, see [this page](/docker/cluster/README.md).
 
 ## Tips and Troubleshooting
 
@@ -277,8 +277,8 @@ a shared account!
 
 ### Weights and Biases Support for Containers
 
-The containers are set up to support Weights and Biases (including on clusters), and
-can link training runs automatically to your account.
+The containers are set up to support Weights and Biases (including on clusters), and can
+link training runs automatically to your account.
 
 For this to work, you must have your Weights and Biases API key exported as an
 environment variable on whichever machine is running the container. The easiest way to
@@ -286,17 +286,20 @@ do this is to append your user account's `~/.bashrc` file with the following:
 ```bash
 export WANDB_API_KEY=[your API key here]
 ```
-Then source the `~/.bashrc` file, or simply open a new terminal. Note this will need to be
-done on your cluster user account if training on a cluster.
+Then source the `~/.bashrc` file, or simply open a new terminal. Note this will need to
+be done on your cluster user account if training on a cluster.
 
-To train using RSL-RL with Weights and Biases enabled inside the container, run the following:
+To train using RSL-RL with Weights and Biases enabled inside the container, run the
+following:
 ```
-./isaaclab_ext.sh -p scripts/rsl_rl/train.py --task Template-Isaac-Velocity-Rough-Anymal-D-v0 --headless --logger wandb --log_project_name isaac-lab-ext-ext_template --run_name docker_test
+./isaaclab_ext.sh -p scripts/rsl_rl/train.py --task Ext-Isaac-Velocity-Rough-Anymal-D-v0 --headless --logger wandb --log_project_name isaac-lab-ext-ext_template --run_name docker_test
 ```
 
 ### Pylance Missing Indexing of Extensions
 
-In some VsCode versions, the indexing of part of the extensions is missing. In this case, add the path to your extension in `.vscode/settings.json` under the key `"python.analysis.extraPaths"`.
+In some VsCode versions, the indexing of part of the extensions is missing. In this
+case, add the path to your extension in `.vscode/settings.json` under the key
+`"python.analysis.extraPaths"`.
 
 ```json
 {
@@ -308,10 +311,11 @@ In some VsCode versions, the indexing of part of the extensions is missing. In t
 
 ### Pylance Crash
 
-If you encounter a crash in `pylance`, it is probable that too many files are indexed and you run out of memory.
-A possible solution is to exclude some of omniverse packages that are not used in your project.
-To do so, modify `.vscode/settings.json` and comment out packages under the key `"python.analysis.extraPaths"`
-Some examples of packages that can likely be excluded are:
+If you encounter a crash in `pylance`, it is probable that too many files are indexed
+and you run out of memory. A possible solution is to exclude some of omniverse packages
+that are not used in your project. To do so, modify `.vscode/settings.json` and comment
+out packages under the key `"python.analysis.extraPaths"` Some examples of packages that
+can likely be excluded are:
 
 ```json
 "<path-to-isaac-sim>/extscache/omni.anim.*"         // Animation packages
@@ -319,4 +323,27 @@ Some examples of packages that can likely be excluded are:
 "<path-to-isaac-sim>/extscache/omni.graph.*"        // Graph UI tools
 "<path-to-isaac-sim>/extscache/omni.services.*"     // Services tools
 ...
+```
+
+### Runaway Processes in Container
+
+If you submit a job to the container from your local machine and, for some reason, the
+process still continues to run inside the container even after you've canceled the job,
+then you can manually enter the container and brute-force kill the process.
+
+Suppose that our script `train.py` is still running on the container:
+```bash
+root@ori-31397:/workspace/isaaclab_ext pgrep -af train.py  # list running processes with train.py
+# 692 /bin/bash /isaac-sim/python.sh scripts/rsl_rl/train.py --task Ext-Isaac-Velocity-Rough-Anymal-D-v0 --headless
+root@ori-31397:/workspace/isaaclab_ext pkill -f train.py # brute-force kill processes with train.py
+```
+
+### Permissions Issues for logs/docs/data_storage
+
+If bind mounts are used for `logs`/`docs`/`data_storage` on the container, then you can run into
+permissions issues when interacting with these directories on the local machine. To fix,
+you can run the following:
+
+```bash
+sudo chown -R $USER:$USER logs/ docs/ data_storage/
 ```

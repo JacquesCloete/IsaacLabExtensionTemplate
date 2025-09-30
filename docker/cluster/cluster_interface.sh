@@ -98,16 +98,22 @@ submit_job() {
 #!/bin/bash
 
 help() {
-    echo -e "\nusage: $(basename "$0") [-h] <command> [<suffix>] [<job_args>...] -- Utility for interfacing between the Isaac Lab Extension and compute clusters."
+    echo -e "\nusage: $(basename "$0") [-h] <command> <args...> -- Utility for interfacing between the Isaac Lab extension and compute clusters."
     echo -e "\noptions:"
     echo -e "  -h              Display this help message."
     echo -e "\ncommands:"
     echo -e "  push [<suffix>]              Push the docker image to the cluster."
-    echo -e "  job [<suffix>] [<job_args>]  Submit a job to the cluster."
+    echo -e "  job [<suffix>] <job_args...> Submit a job to the cluster."
+    echo -e "  status [<user>]              Check the status of running jobs on the cluster. Optional: specify a user."
+    echo -e "  logs <job_id>                Follow the logs of a running job."
+    echo -e "  cancel <job_id>              Cancel a running or pending job."
+    echo -e "  copy                         Copy the logs from the cluster to the local machine."
     echo -e "  cleanup                      Remove all timestamped project directories from the cluster."
     echo -e "\nwhere:"
     echo -e "  <suffix>  is the optional container name suffix. Defaults to 'ext_template'."
     echo -e "  <job_args> are optional arguments specific to the job command."
+    echo -e "  <job_id>    is the ID of the job from the scheduler."
+    echo -e "  <user>      is the username on the cluster."
     echo -e "\n" >&2
 }
 
@@ -216,6 +222,97 @@ case $command in
         echo "[INFO] Executing job script..."
         # check whether the second argument is a suffix or a job argument
         submit_job $job_args
+        ;;
+    status)
+        # source env file to get cluster login and path information
+        source $SCRIPT_DIR/.env.cluster
+        # get user from login
+        cluster_user=$(echo $CLUSTER_LOGIN | cut -d'@' -f1)
+        # if user is provided as argument, use it instead
+        [ $# -eq 1 ] && cluster_user=$1
+        echo "[INFO] Checking job status for user '$cluster_user' on '$CLUSTER_LOGIN'..."
+
+        case $CLUSTER_JOB_SCHEDULER in
+            "SLURM")
+                ssh $CLUSTER_LOGIN "squeue -u $cluster_user"
+                ;;
+            "PBS")
+                ssh $CLUSTER_LOGIN "qstat -u $cluster_user"
+                ;;
+            *)
+                echo "[ERROR] Unsupported job scheduler specified: '$CLUSTER_JOB_SCHEDULER'."
+                exit 1
+                ;;
+        esac
+        ;;
+    logs)
+        if [ $# -ne 1 ]; then
+            echo "Error: The 'logs' command requires a job ID." >&2
+            help
+            exit 1
+        fi
+        job_id=$1
+        # source env file to get cluster login and path information
+        source $SCRIPT_DIR/.env.cluster
+        echo "[INFO] Tailing logs for job '$job_id' on '$CLUSTER_LOGIN'..."
+
+        case $CLUSTER_JOB_SCHEDULER in
+            "SLURM")
+                # Find the output file for the given job ID and tail it.
+                ssh -t $CLUSTER_LOGIN "job_file=\$(scontrol show job $job_id | grep -o 'StdOut=.*' | cut -d'=' -f2); if [ -f \"\$job_file\" ]; then tail -f \"\$job_file\"; else echo 'Log file not found or job has not started writing output yet.'; fi"
+                ;;
+            "PBS")
+                # PBS output files are typically named <job_name>.o<job_id>
+                ssh -t $CLUSTER_LOGIN "job_file=\$(qstat -f $job_id | grep -o 'Output_Path = .*' | cut -d'=' -f2 | cut -d':' -f2); if [ -f \"\$job_file\" ]; then tail -f \"\$job_file\"; else echo 'Log file not found or job has not started writing output yet.'; fi"
+                ;;
+            *)
+                echo "[ERROR] Unsupported job scheduler specified: '$CLUSTER_JOB_SCHEDULER'."
+                exit 1
+                ;;
+        esac
+        ;;
+    cancel)
+        if [ $# -ne 1 ]; then
+            echo "Error: The 'cancel' command requires a job ID." >&2
+            help
+            exit 1
+        fi
+        job_id=$1
+        # source env file to get cluster login and path information
+        source $SCRIPT_DIR/.env.cluster
+        echo "[INFO] Cancelling job '$job_id' on '$CLUSTER_LOGIN'..."
+
+        case $CLUSTER_JOB_SCHEDULER in
+            "SLURM")
+                ssh $CLUSTER_LOGIN "scancel $job_id"
+                ;;
+            "PBS")
+                ssh $CLUSTER_LOGIN "qdel $job_id"
+                ;;
+            *)
+                echo "[ERROR] Unsupported job scheduler specified: '$CLUSTER_JOB_SCHEDULER'."
+                exit 1
+                ;;
+        esac
+        ;;
+    copy)
+        if [ $# -gt 0 ]; then
+            echo "Error: The 'copy' command does not take any arguments." >&2
+            help
+            exit 1
+        fi
+        echo "[INFO] Copying logs from the cluster..."
+        source $SCRIPT_DIR/.env.cluster
+
+        remote_log_path="$CLUSTER_PROJECT_DIR/logs/"
+        local_log_path="$SCRIPT_DIR/../../logs/"
+
+        # Create local logs directory if it doesn't exist
+        mkdir -p "$local_log_path"
+
+        echo "[INFO] Syncing logs from '$CLUSTER_LOGIN:$remote_log_path' to '$local_log_path'..."
+        rsync -azv --info=progress2 "$CLUSTER_LOGIN:$remote_log_path" "$local_log_path"
+        echo "[INFO] Log synchronization complete."
         ;;
     cleanup)
         echo "[INFO] Executing cleanup command"

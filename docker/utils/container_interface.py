@@ -8,6 +8,7 @@ from __future__ import annotations
 import os
 import shutil
 import subprocess
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -162,6 +163,149 @@ class ContainerInterface:
             ])
         else:
             raise RuntimeError(f"The container '{self.container_name}' is not running.")
+        
+    def job(self, job_args: list[str]):
+        """Run a command in the container in the background.
+
+        This uses `docker exec` to start a new process inside the running container.
+        The process is run in the background, and its PID is stored in a file
+        in the container's `/tmp` directory for management.
+
+        Args:
+            job_args: A list of arguments for the job. The first argument is typically
+                the path to the python script to execute.
+
+        Raises:
+            RuntimeError: If the container is not running.
+            ValueError: If no job arguments are provided.
+        """
+        if not self.is_container_running():
+            raise RuntimeError(
+                f"The container '{self.container_name}' is not running. Please start it first with the 'start' command."
+            )
+        if not job_args:
+            raise ValueError("No job arguments provided. You must specify a script to run.")
+        
+        # Check if the script file exists on the host
+        script_path = self.context_dir.parent / job_args[0]
+        if not script_path.is_file():
+            raise FileNotFoundError(
+                f"The specified script does not exist or is not a file: {script_path}\n"
+                f"Please provide a valid path to a script within the project."
+            )
+
+        # Define a name for the job based on the script name
+        script_name = Path(job_args[0]).stem
+        time_str = datetime.now().strftime("%Y%m%d_%H%M%S")
+        job_name = f"{script_name}-{time_str}"
+        pid_file = f"/tmp/{job_name}.pid"
+
+        print(f"[INFO] Submitting job '{job_name}' to container '{self.container_name}'...")
+
+        # Construct the command to be run inside the container
+        # This command starts the python script in the background, and saves its PID to a file.
+        docker_isaac_lab_path = self.dot_vars["DOCKER_ISAACLAB_EXT_PATH"]
+        command_to_run = (
+            f"cd {docker_isaac_lab_path} && "
+            f"nohup /isaac-sim/python.sh {' '.join(job_args)} > /tmp/{job_name}.log 2>&1 & "
+            f"echo $! > {pid_file}"
+        )
+
+        # Execute the command using 'docker exec'
+        subprocess.run(
+            ["docker", "exec", self.container_name, "bash", "-c", command_to_run],
+            check=True,
+        )
+        print(f"[INFO] Successfully submitted job. Use 'status' to check and 'cancel {job_name}' to stop.")
+
+    def status(self, job_name: str | None = None):
+        """Check the status of running jobs within the container.
+
+        Args:
+            job_name: If provided, checks the status of a specific job. Otherwise, lists all running jobs.
+
+        Raises:
+            RuntimeError: If the container is not running.
+        """
+        if not self.is_container_running():
+            raise RuntimeError(f"The container '{self.container_name}' is not running.")
+
+        print(f"[INFO] Checking job status in container '{self.container_name}'...")
+        if job_name:
+            command_to_run = f"if [ -f /tmp/{job_name}.pid ] && ps -p $(cat /tmp/{job_name}.pid) > /dev/null; then echo 'Job {job_name} is running.'; else echo 'Job {job_name} is not running or has completed.'; fi"
+        else:
+            command_to_run = (
+                "echo 'Running jobs:'; "
+                "for f in /tmp/*.pid; do "
+                "  if [ -e \"$f\" ]; then "
+                "    pid=$(cat \"$f\"); "
+                "    if ps -p \"$pid\" > /dev/null; then "
+                "      echo \"  - $(basename \"$f\" .pid)\"; "
+                "    else "
+                "      rm \"$f\"; "
+                "    fi; "
+                "  fi; "
+                "done"
+            )
+        subprocess.run(["docker", "exec", self.container_name, "bash", "-c", command_to_run], check=True)
+
+    def cancel(self, job_name: str):
+        """Cancel a running job within the container.
+
+        Args:
+            job_name: The name of the job to cancel.
+
+        Raises:
+            RuntimeError: If the container is not running.
+        """
+        if not self.is_container_running():
+            raise RuntimeError(f"The container '{self.container_name}' is not running.")
+
+        print(f"[INFO] Attempting to cancel job '{job_name}' in container '{self.container_name}'...")
+        pid_file = f"/tmp/{job_name}.pid"
+        log_file = f"/tmp/{job_name}.log"
+        command_to_run = (
+            f"if [ -f {pid_file} ]; then "
+            f"  PGID=$(ps -o pgid= $(cat {pid_file}) | grep -o '[0-9]*');"
+            f"  kill -- -$PGID; "
+            f"  rm {pid_file} {log_file}; "
+            f"  echo 'Successfully cancelled job {job_name}.'; "
+            f"else "
+            f"  echo 'Could not find job {job_name}. It may have already completed or been cancelled.'; "
+            f"fi"
+        )
+        subprocess.run(["docker", "exec", self.container_name, "bash", "-c", command_to_run], check=True)
+
+    def logs(self, job_name: str):
+        """Follow the logs of a running job within the container.
+
+        Args:
+            job_name: The name of the job to follow.
+
+        Raises:
+            RuntimeError: If the container is not running.
+        """
+        if not self.is_container_running():
+            raise RuntimeError(f"The container '{self.container_name}' is not running.")
+
+        print(f"[INFO] Following logs for job '{job_name}' in container '{self.container_name}'...")
+        print("[INFO] Press Ctrl+C to stop following.")
+        log_file = f"/tmp/{job_name}.log"
+
+        # Command to check if log file exists and then tail it
+        command_to_run = (
+            f"if [ -f {log_file} ]; then "
+            f"  tail -f {log_file}; "
+            f"else "
+            f"  echo 'Log file for job {job_name} not found. The job may not have started or has been cancelled.'; "
+            f"fi"
+        )
+
+        # We use -it to allow `tail -f` to be interrupted with Ctrl+C
+        subprocess.run(
+            ["docker", "exec", "-it", self.container_name, "bash", "-c", command_to_run],
+            check=False,
+        )
 
     def stop(self):
         """Stop the running container using the Docker compose command.

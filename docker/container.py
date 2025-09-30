@@ -18,7 +18,7 @@ def parse_cli_args() -> argparse.Namespace:
 
     parent_parser = argparse.ArgumentParser(add_help=False)
     parent_parser.add_argument(
-        "suffix",
+        "--suffix",
         nargs="?",
         default="ext_template",
         help=(
@@ -59,6 +59,28 @@ def parse_cli_args() -> argparse.Namespace:
     )
     subparsers.add_parser("stop", help="Stop the docker container and remove it.", parents=[parent_parser])
 
+    job_parser = subparsers.add_parser(
+        "job",
+        help="Run a command in the container. The first argument should be the python script to run.",
+        parents=[parent_parser],
+    )
+    job_parser.add_argument("job_args", nargs=argparse.REMAINDER, help="Arguments for the job.")
+
+    status_parser = subparsers.add_parser(
+        "status", help="Check the status of running jobs in the container.", parents=[parent_parser]
+    )
+    status_parser.add_argument("job_name", nargs="?", default=None, help="Optional name of the job to check.")
+
+    cancel_parser = subparsers.add_parser(
+        "cancel", help="Cancel a running job in the container.", parents=[parent_parser]
+    )
+    cancel_parser.add_argument("job_name", help="The name of the job to cancel.")
+
+    logs_parser = subparsers.add_parser(
+        "logs", help="Follow the logs of a running job in the container.", parents=[parent_parser]
+    )
+    logs_parser.add_argument("job_name", help="The name of the job to follow.")
+
     args = parser.parse_args()
     return args
 
@@ -91,6 +113,14 @@ def main(args: argparse.Namespace):
         ci.enter()
     elif args.command == "copy":
         ci.copy()
+    elif args.command == "job":
+        ci.job(args.job_args)
+    elif args.command == "status":
+        ci.status(args.job_name)
+    elif args.command == "cancel":
+        ci.cancel(args.job_name)
+    elif args.command == "logs":
+        ci.logs(args.job_name)
     elif args.command == "stop":
         ci.stop()
         x11_utils.x11_cleanup(ci.statefile)
@@ -100,4 +130,7 @@ def main(args: argparse.Namespace):
 
 if __name__ == "__main__":
     args_cli = parse_cli_args()
-    main(args_cli)
+    try:
+        main(args_cli)
+    except KeyboardInterrupt:
+        print("\n[INFO] Operation cancelled by user.")

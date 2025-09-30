@@ -35,30 +35,41 @@ x-default-isaac-lab-ext-volumes: &default-isaac-lab-ext-volumes
     source: isaac-docs
     target: /root/Documents
   # Bind mounts for your ext project
-  # You could add more here if you want to save e.g. logs, outputs, etc locally
+  # Note: may need to use sudo to delete files created from within the container
+  # (if not available, just delete them from within the container)
+  # To gain ownership: sudo chown -R $USER:$USER logs/ data_storage/ docs/
   - type: bind
     source: ../source
-    target: ${DOCKER_ISAACLAB_PATH}/source
+    target: ${DOCKER_ISAACLAB_EXT_PATH}/source
   - type: bind
     source: ../scripts
-    target: ${DOCKER_ISAACLAB_PATH}/scripts
+    target: ${DOCKER_ISAACLAB_EXT_PATH}/scripts
+  # Option A: Direct binding of the docs, logs, and data_storage directories
   - type: bind
     source: ../docs
-    target: ${DOCKER_ISAACLAB_PATH}/docs
-    # The effect of these volumes is twofold:
-    # 1. Prevent root-owned files from flooding the _build and logs dir
-    #    on the host machine
-    # 2. Preserve the artifacts in persistent volumes for later copying
-    #    to the host machine
-  - type: volume
-    source: isaac-lab-ext-docs
-    target: ${DOCKER_ISAACLAB_EXT_PATH}/docs/_build
-  - type: volume
-    source: isaac-lab-ext-logs
+    target: ${DOCKER_ISAACLAB_EXT_PATH}/docs
+  - type: bind
+    source: ../logs
     target: ${DOCKER_ISAACLAB_EXT_PATH}/logs
-  - type: volume
-    source: isaac-lab-ext-data
-    target: ${DOCKER_ISAACLAB_EXT_PATH}/data
+  - type: bind
+    source: ../data_storage
+    target: ${DOCKER_ISAACLAB_EXT_PATH}/data_storage
+  # OR:
+  # Option B: Use volumes to store the docs, logs, and data_storage directories
+  # The effect of these volumes is twofold:
+  # 1. Prevent root-owned files from flooding the _build and logs dir
+  #    on the host machine
+  # 2. Preserve the artifacts in persistent volumes for later copying
+  #    to the host machine
+  # - type: volume
+  #   source: isaac-lab-docs
+  #   target: ${DOCKER_ISAACLAB_PATH}/docs/_build
+  # - type: volume
+  #   source: isaac-lab-logs
+  #   target: ${DOCKER_ISAACLAB_PATH}/logs
+  # - type: volume
+  #   source: isaac-lab-data
+  #   target: ${DOCKER_ISAACLAB_PATH}/data_storage
   # This volume is used to store the history of the bash shell
   - type: bind
     source: .isaac-lab-ext-docker-history
