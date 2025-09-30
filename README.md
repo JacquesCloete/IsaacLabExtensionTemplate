@@ -87,7 +87,7 @@ your extension project:
 1. Edit `docker/.env.ext` to specify your base image name
 1. Build the container using:
 ```bash
-docker/.container.py start
+docker/container.py start
 ```
 Note that `--suffix` is not needed when interacting with your extension image using
 `container.py` in the extension project.
@@ -112,7 +112,7 @@ docker images
 if the image exists, you can start the container as follows:
 
 ```bash
-docker/.container.py start
+docker/container.py start
 ```
 
 #### 3.2 Interacting with a running container
@@ -120,7 +120,7 @@ docker/.container.py start
 To enter the container once started, use:
 
 ```bash
-docker/.container.py enter
+docker/container.py enter
 ```
 
 Alternatively, if you use VSCode, I instead recommend pressing `Ctrl+Shift+P`, selecting
@@ -172,7 +172,7 @@ docker/container.py cancel train-20250929_103000
 When you are done or want to stop the running container, you can run the following:
 
 ```bash
-docker/.container.py stop
+docker/container.py stop
 ```
 
 This stops and removes the container, but keeps the image.
