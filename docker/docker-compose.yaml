@@ -44,33 +44,39 @@ x-default-isaac-lab-ext-volumes: &default-isaac-lab-ext-volumes
   - type: bind
     source: ../scripts
     target: ${DOCKER_ISAACLAB_EXT_PATH}/scripts
-  # Option A: Direct binding of the docs, logs, and data_storage directories
-  # This allows updates to be immediately visible between host and container
-  - type: bind
-    source: ../docs
-    target: ${DOCKER_ISAACLAB_EXT_PATH}/docs
-  - type: bind
-    source: ../logs
-    target: ${DOCKER_ISAACLAB_EXT_PATH}/logs
-  - type: bind
-    source: ../data_storage
-    target: ${DOCKER_ISAACLAB_EXT_PATH}/data_storage
-  # OR:
-  # Option B: Use volumes to store the docs, logs, and data_storage directories
+  #############################################################################
+  # Option 1: Use volumes to store the docs, logs, and data_storage directories
   # The effect of these volumes is twofold:
   # 1. Prevent root-owned files from flooding the _build and logs dir
   #    on the host machine
   # 2. Preserve the artifacts in persistent volumes for later copying
   #    to the host machine
-  # - type: volume
-  #   source: isaac-lab-docs
-  #   target: ${DOCKER_ISAACLAB_PATH}/docs/_build
-  # - type: volume
-  #   source: isaac-lab-logs
-  #   target: ${DOCKER_ISAACLAB_PATH}/logs
-  # - type: volume
-  #   source: isaac-lab-data
-  #   target: ${DOCKER_ISAACLAB_PATH}/data_storage
+  #############################################################################
+  - type: volume
+    source: isaac-lab-docs
+    target: ${DOCKER_ISAACLAB_PATH}/docs/_build
+  - type: volume
+    source: isaac-lab-logs
+    target: ${DOCKER_ISAACLAB_PATH}/logs
+  - type: volume
+    source: isaac-lab-data
+    target: ${DOCKER_ISAACLAB_PATH}/data_storage
+  #############################################################################
+  # OR:
+  #############################################################################
+  # Option 2: Direct binding of the docs, logs, and data_storage directories
+  # This allows updates to be immediately visible between host and container
+  #############################################################################
+  # - type: bind
+  #   source: ../docs
+  #   target: ${DOCKER_ISAACLAB_EXT_PATH}/docs
+  # - type: bind
+  #   source: ../logs
+  #   target: ${DOCKER_ISAACLAB_EXT_PATH}/logs
+  # - type: bind
+  #   source: ../data_storage
+  #   target: ${DOCKER_ISAACLAB_EXT_PATH}/data_storage
+  #############################################################################
   # This volume is used to store the history of the bash shell
   - type: bind
     source: .isaac-lab-ext-docker-history
