@@ -17,12 +17,12 @@ cat <<EOT > job.sh
 #SBATCH --output="$2-%j.out"
 #SBATCH --error="$2-%j.err"
 #SBATCH --partition=short
-#SBATCH --time=00:30:00
+#SBATCH --time=03:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=8
 #SBATCH --mem-per-cpu=4G
-#SBATCH --gres=gpu:rtx8000:1
+#SBATCH --gres=gpu:rtx:1
 #SBATCH --constraint=os:redhat8
 #SBATCH --export=WANDB_API_KEY
 
