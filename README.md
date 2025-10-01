@@ -140,7 +140,8 @@ docker/container.py enter
 
 Alternatively, if you use VSCode, I instead recommend pressing `Ctrl+Shift+P`, selecting
 `Dev Containers: Attach to Running Container...` and then selecting your container. This
-will re-open VSCode inside the container (including integrated terminals).
+will re-open VSCode inside the container (including integrated terminals). Once inside,
+open the folder `/workspace/isaaclab_ext`.
 
 To verify the container is correctly built, run the following command inside the
 container:
