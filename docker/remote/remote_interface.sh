@@ -45,10 +45,12 @@ help() {
     echo -e "  cancel <job_id>              Cancel a running job."
     echo -e "  copy                         Copy the logs from the remote machine to the local machine."
     echo -e "  cleanup                      Remove all timestamped project directories from the remote machine."
+    echo -e "  fix_permissions [<suffix>] <timestamp> Fix file permissions for a given run."
     echo -e "\nwhere:"
     echo -e "  <suffix>  is the optional container name suffix. Defaults to 'ext_template'."
     echo -e "  <job_args> are optional arguments specific to the job command."
     echo -e "  <job_id>  is the ID of the job."
+    echo -e "  <timestamp> is the timestamp of the job run (e.g., 20251001_170428)."
     echo -e "\n" >&2
 }
 
@@ -200,6 +202,32 @@ case $command in
         echo "[INFO] Deleting directories matching '${base_project_dir_name}_*' in '$parent_dir' on '$REMOTE_LOGIN'..."
         ssh $REMOTE_LOGIN "find '$parent_dir' -mindepth 1 -maxdepth 1 -type d -name '${base_project_dir_name}_*' -exec rm -rf {} +"
         echo "[INFO] Cleanup complete."
+        ;;
+    fix_permissions)
+        if [ $# -lt 1 ] || [ $# -gt 2 ]; then
+            echo "Error: The 'fix_permissions' command requires a timestamp and an optional suffix." >&2
+            help
+            exit 1
+        fi
+        # The last argument is the timestamp
+        timestamp="${@: -1}"
+        # If there are two arguments, the first is the suffix
+        if [ $# -eq 2 ]; then
+            suffix=$1
+        fi
+
+        echo "[INFO] Executing fix_permissions command"
+        [ -n "$suffix" ] && echo -e "\tUsing suffix: $suffix"
+        echo -e "\tUsing timestamp: $timestamp"
+
+        source $SCRIPT_DIR/.env.remote
+
+        REMOTE_PROJECT_DIR_TIMESTAMPED="${REMOTE_PROJECT_DIR}_${timestamp}"
+        REMOTE_LOGS_DIR="$REMOTE_PROJECT_DIR/logs"
+        IMAGE_NAME="isaac-lab-ext-$suffix"
+
+        echo "[INFO] Fixing permissions on remote..."
+        ssh $REMOTE_LOGIN "cd $REMOTE_PROJECT_DIR_TIMESTAMPED/isaaclab_ext/docker/remote && bash fix_permissions.sh \"$REMOTE_PROJECT_DIR_TIMESTAMPED\" \"$IMAGE_NAME\" \"$REMOTE_LOGS_DIR\""
         ;;
     *)
         echo "Error: Invalid command: $command" >&2

@@ -361,24 +361,46 @@ You can choose which you want to use by commenting/uncommenting the relevant blo
 [docker/docker-compose.yaml](/docker/docker-compose.yaml):
 - If your user account has `sudo` permissions, then it's fine (and indeed very
   convenient) to use bind mounts.
-- If not, it's safest to use volume mounts.
+- If not, while it's technically safest to use volume mounts, ownership can be fixed
+  even when using bind mounts by running the
+  following:
+```bash
+./docker/fix_permissions.sh
+# [INFO] Using image: isaac-lab-ext-my_extension
+# [INFO] Fixing permissions for directory: /home/jacques/projects/IsaacLabMyExtension/docker/..
+# [INFO] Permissions fixed successfully.
+```
 
 For remote workstation and cluster deployment, they are always bind-mounted (but this is
 handled for you under the hood).
+
+`source` and `scripts` are always bind-mounted, even for containers on the local
+machine. This allows changes in the source code to immediately appear in the container.
 
 # Troubleshooting
 
 Here we troubleshoot some common issues when using this repository.
 
-## Permissions Issues for `logs`/`docs`/`data_storage`
+## Permissions Issues for Bind-Mounted Files Created by the Container
 
-If bind mounts are used for `logs`/`docs`/`data_storage` on the container, then you can run into
-permissions issues when interacting with these directories on the local machine. To fix,
-you can run the following:
+It's possible to encounter permissions issues when interacting with directories on the
+local machine after having used the container. To fix this, you can run the following:
 ```bash
-sudo chown -R $USER:$USER logs/ docs/ data_storage/
+./docker/fix_permissions.sh
+# [INFO] Using image: isaac-lab-ext-my_extension
+# [INFO] Fixing permissions for directory: /home/jacques/projects/IsaacLabMyExtension/docker/..
+# [INFO] Permissions fixed successfully.
 ```
-Note that this requires `sudo` permissions.
+Note that if your docker image or
+[`docker/fix_permissions.sh`](/docker/fix_permissions.sh) were deleted already, you'll
+have to manually re-create them first (just re-create the image from a new project
+folder, and copy in a replacement `docker/fix_permissions.sh` file to this project
+folder, respectively).
+
+Alternatively, if you have `sudo` permissions, you can run the following:
+```bash
+sudo chown -R $USER:$USER .
+```
 
 ## Runaway Processes in Container
 

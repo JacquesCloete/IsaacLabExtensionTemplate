@@ -3,19 +3,6 @@
 The method we use for remote workstation deployment was inspired by the approach for
 cluster deployment (see [here](/docker/cluster/README.md)).
 
-## A Word of Caution
-
-During operation, the container creates root-owned files bind-mounted onto the remote
-workstation. While these files are made user-owned at the end of normal operation, under
-exceptional circumstances (docker daemon crash, kernel panic, etc.) mid-execution, these
-files could remain root-owned and thus unable to be deleted by users without `sudo`
-permissions.
-
-Make sure you can contact someone with `sudo` permissions on the remote workstation, in
-case you need the files deleted using `sudo`. If this is not possible, it's probably
-safest to manually install and run the container "locally" on the remote workstation
-instead (as if it were your local machine).
-
 ## 1 Remote Workstation Parameters
 
 Edit [`docker/remote/.env.remote`](/docker/remote/.env.remote) to suit your needs.
@@ -110,3 +97,39 @@ folders by running the following on your local machine:
 # [INFO] Deleting directories matching 'isaac-lab-ext-my_extension_*' in '/home/jacques/remote' on 'jacques@sirius'...
 # [INFO] Cleanup complete.
 ```
+
+# Troubleshooting
+
+## Fixing Permissions Issues
+
+During operation, the container creates root-owned files bind-mounted onto the remote
+workstation. While these files are made user-owned at the end of normal operation, under
+exceptional circumstances (docker daemon crash, kernel panic, etc.) mid-execution, these
+files could remain root-owned and thus unable to be deleted by users without `sudo`
+permissions.
+
+To fix permissions issues for a timestamped "temporary" folder (and all the
+logs in the "permanent" folder), you can run the following on your local machine:
+```bash
+./docker/remote/remote_interface.sh fix_permissions 20251001_141540
+# [INFO] Executing fix_permissions command
+# 	Using suffix: my_extension
+# 	Using timestamp: 20251001_141540
+# [INFO] Fixing permissions on remote...
+# [INFO] Using image: isaac-lab-ext-my_extension
+# [INFO] Fixing permissions for directory: /home/jacques/remote/isaac-lab-ext-my_extension_20251001_141540
+# [INFO] Permissions fixed successfully.
+```
+Note that we only include the timestamp as an argument, not the full job name.
+
+After running this script, the files should now be able to be deleted.
+
+Note that if your docker image on the remote machine or
+[`docker/remote/fix_permissions.sh`](/docker/remote/fix_permissions.sh) in the
+`isaaclab_ext` subfolder of the timestamped "temporary" folder were deleted already,
+you'll have to manually re-create them first (just re-push the image, and copy in a
+replacement `docker/remote/fix_permissions.sh` file to the `isaaclab_ext` subfolder of
+the timestamped "temporary" folder, respectively).
+
+Alternatively, if you have `sudo` permissions on the remote machine, you can just log
+into it and then delete the folders manually.

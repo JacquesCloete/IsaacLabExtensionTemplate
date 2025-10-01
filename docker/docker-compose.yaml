@@ -53,14 +53,14 @@ x-default-isaac-lab-ext-volumes: &default-isaac-lab-ext-volumes
   #    to the host machine
   #############################################################################
   - type: volume
-    source: isaac-lab-docs
-    target: ${DOCKER_ISAACLAB_PATH}/docs/_build
+    source: isaac-lab-ext-docs
+    target: ${DOCKER_ISAACLAB_EXT_PATH}/docs/_build
   - type: volume
-    source: isaac-lab-logs
-    target: ${DOCKER_ISAACLAB_PATH}/logs
+    source: isaac-lab-ext-logs
+    target: ${DOCKER_ISAACLAB_EXT_PATH}/logs
   - type: volume
-    source: isaac-lab-data
-    target: ${DOCKER_ISAACLAB_PATH}/data_storage
+    source: isaac-lab-ext-data
+    target: ${DOCKER_ISAACLAB_EXT_PATH}/data_storage
   #############################################################################
   # OR:
   #############################################################################
