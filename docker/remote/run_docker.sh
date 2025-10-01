@@ -15,28 +15,6 @@
 echo "(run_docker.sh): Called on remote machine from project directory $1 with image name $2 and arguments ${@:4}"
 
 #==
-# Helper functions
-#==
-
-setup_directories() {
-    # Check and create directories
-    for dir in \
-        "${REMOTE_ISAAC_SIM_CACHE_DIR}/cache/kit" \
-        "${REMOTE_ISAAC_SIM_CACHE_DIR}/cache/ov" \
-        "${REMOTE_ISAAC_SIM_CACHE_DIR}/cache/pip" \
-        "${REMOTE_ISAAC_SIM_CACHE_DIR}/cache/glcache" \
-        "${REMOTE_ISAAC_SIM_CACHE_DIR}/cache/computecache" \
-        "${REMOTE_ISAAC_SIM_CACHE_DIR}/logs" \
-        "${REMOTE_ISAAC_SIM_CACHE_DIR}/data" \
-        "${REMOTE_ISAAC_SIM_CACHE_DIR}/documents"; do
-        if [ ! -d "$dir" ]; then
-            mkdir -p "$dir"
-            echo "Created directory: $dir"
-        fi
-    done
-}
-
-#==
 # Main
 #==
 
@@ -69,15 +47,8 @@ HOST_GID=$(id -g)
 # The `trap` ensures the chown command runs even if the job is cancelled (e.g., with `docker stop`).
 INNER_COMMAND="
 trap 'chown -R ${HOST_UID}:${HOST_GID} \
-    /workspace/isaaclab_ext/logs \
-    ${DOCKER_ISAACSIM_ROOT_PATH}/kit/cache \
-    ${DOCKER_USER_HOME}/.cache/ov \
-    ${DOCKER_USER_HOME}/.cache/pip \
-    ${DOCKER_USER_HOME}/.cache/nvidia/GLCache \
-    ${DOCKER_USER_HOME}/.nv/ComputeCache \
-    ${DOCKER_USER_HOME}/.nvidia-omniverse/logs \
-    ${DOCKER_USER_HOME}/.local/share/ov/data \
-    ${DOCKER_USER_HOME}/Documents' EXIT
+    /workspace/isaaclab \
+    /workspace/isaaclab_ext' EXIT
 
 export ISAACLAB_PATH=/workspace/isaaclab && export ISAACLAB_EXT_PATH=/workspace/isaaclab_ext && cd /workspace/isaaclab_ext && /isaac-sim/python.sh ${REMOTE_PYTHON_EXECUTABLE} ${@:4}
 "
@@ -87,19 +58,19 @@ export ISAACLAB_PATH=/workspace/isaaclab && export ISAACLAB_EXT_PATH=/workspace/
 # We run as root, but the INNER_COMMAND will fix permissions on exit.
 docker run --rm -d -it --network=host --gpus device=${REMOTE_GPU_ID} --name "$3" \
     --label "managed-by=remote-interface" \
-    -v "${REMOTE_ISAAC_SIM_CACHE_DIR}/cache/kit:${DOCKER_ISAACSIM_ROOT_PATH}/kit/cache:rw" \
-    -v "${REMOTE_ISAAC_SIM_CACHE_DIR}/cache/ov:${DOCKER_USER_HOME}/.cache/ov:rw" \
-    -v "${REMOTE_ISAAC_SIM_CACHE_DIR}/cache/pip:${DOCKER_USER_HOME}/.cache/pip:rw" \
-    -v "${REMOTE_ISAAC_SIM_CACHE_DIR}/cache/glcache:${DOCKER_USER_HOME}/.cache/nvidia/GLCache:rw" \
-    -v "${REMOTE_ISAAC_SIM_CACHE_DIR}/cache/computecache:${DOCKER_USER_HOME}/.nv/ComputeCache:rw" \
-    -v "${REMOTE_ISAAC_SIM_CACHE_DIR}/logs:${DOCKER_USER_HOME}/.nvidia-omniverse/logs:rw" \
-    -v "${REMOTE_ISAAC_SIM_CACHE_DIR}/data:${DOCKER_USER_HOME}/.local/share/ov/data:rw" \
-    -v "${REMOTE_ISAAC_SIM_CACHE_DIR}/documents:${DOCKER_USER_HOME}/Documents:rw" \
+    -v "$2-isaac-cache-kit:${DOCKER_ISAACSIM_ROOT_PATH}/kit/cache:rw" \
+    -v "$2-isaac-cache-ov:${DOCKER_USER_HOME}/.cache/ov:rw" \
+    -v "$2-isaac-cache-pip:${DOCKER_USER_HOME}/.cache/pip:rw" \
+    -v "$2-isaac-cache-gl:${DOCKER_USER_HOME}/.cache/nvidia/GLCache:rw" \
+    -v "$2-isaac-cache-compute:${DOCKER_USER_HOME}/.nv/ComputeCache:rw" \
+    -v "$2-isaac-logs:${DOCKER_USER_HOME}/.nvidia-omniverse/logs:rw" \
+    -v "$2-isaac-data:${DOCKER_USER_HOME}/.local/share/ov/data:rw" \
+    -v "$2-isaac-docs:${DOCKER_USER_HOME}/Documents:rw" \
     -v "$1/isaaclab:/workspace/isaaclab:rw" \
     -v "$1/isaaclab_ext:/workspace/isaaclab_ext:rw" \
     -v "$REMOTE_PROJECT_DIR/logs:/workspace/isaaclab_ext/logs:rw" \
-    -e "WANDB_API_KEY=${WANDB_API_KEY}" \
     -e "OMNI_KIT_ALLOW_ROOT=1" \
+    -e "WANDB_API_KEY=${WANDB_API_KEY}" \
     --entrypoint bash \
     "$2" \
     -c "${INNER_COMMAND}"

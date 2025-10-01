@@ -3,6 +3,19 @@
 The method we use for remote workstation deployment was inspired by the approach for
 cluster deployment (see [here](/docker/cluster/README.md)).
 
+## A Word of Caution
+
+During operation, the container creates root-owned files bind-mounted onto the remote
+workstation. While these files are made user-owned at the end of normal operation, under
+exceptional circumstances (docker daemon crash, kernel panic, etc.) mid-execution, these
+files could remain root-owned and thus unable to be deleted by users without `sudo`
+permissions.
+
+Make sure you can contact someone with `sudo` permissions on the remote workstation, in
+case you need the files deleted using `sudo`. If this is not possible, it's probably
+safest to manually install and run the container "locally" on the remote workstation
+instead (as if it were your local machine).
+
 ## 1 Define the Remote Workstation Parameters
 
 Edit `docker/remote/.env.remote` to suit your needs.

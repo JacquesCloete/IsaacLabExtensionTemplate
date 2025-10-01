@@ -281,16 +281,26 @@ The containers are set up to support Weights and Biases (including on clusters),
 link training runs automatically to your account.
 
 For this to work, you must have your Weights and Biases API key exported as an
-environment variable on whichever machine is running the container. The easiest way to
-do this is to append your user account's `~/.bashrc` file with the following:
+environment variable. The easiest way to do this is to append your user account's
+`~/.bashrc` file with the following:
 ```bash
 export WANDB_API_KEY=[your API key here]
 ```
-Then source the `~/.bashrc` file, or simply open a new terminal. Note this will need to
-be done on your cluster user account if training on a cluster.
+Then source the `~/.bashrc` file, or simply open a new terminal. The `~/.bashrc` file to
+append to depends on where the container is running:
 
-To train using RSL-RL with Weights and Biases enabled inside the container, run the
-following:
+| Location           | `~/.bashrc` file                           |
+|--------------------|--------------------------------------------|
+| Local machine      | Local machine user login                   |
+| Remote workstation | Local machine user login (**not** remote!) |
+| Cluster            | Cluster user login                         |
+
+**NOTE:** interactively SSHing in to the remote workstation and manually running the
+container from there counts as "local machine" but applied to the remote workstation, so
+you'd need to edit the `~/.bashrc` on the remote workstation in that case.
+
+To train using RSL-RL with Weights and Biases enabled inside the container on your lcoal
+machine, run the following:
 ```
 ./isaaclab_ext.sh -p scripts/rsl_rl/train.py --task Ext-Isaac-Velocity-Rough-Anymal-D-v0 --headless --logger wandb --log_project_name isaac-lab-ext-ext_template --run_name docker_test
 ```
