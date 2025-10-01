@@ -25,9 +25,6 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 source $SCRIPT_DIR/.env.remote
 source $SCRIPT_DIR/../.env.ext
 
-# make sure that all directories exists in cache directory
-setup_directories
-
 # Make sure logs directory exists
 mkdir -p "$REMOTE_PROJECT_DIR/logs"
 
